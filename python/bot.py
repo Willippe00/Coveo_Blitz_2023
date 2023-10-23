@@ -71,14 +71,16 @@ class Bot:
 
 
         facteur = 1
-        if(LargeurActuel < 120):
+        if(LargeurActuel < 200):
             facteur = 0
+        elif (TypeAsteroide == MeteorType.Small and LargeurActuel < 600):
+            facteur = 1.2
         elif(TypeAsteroide == MeteorType.Large):
             facteur = 0.9
         elif(TypeAsteroide == MeteorType.Medium):
             facteur = 0.72
         elif (TypeAsteroide == MeteorType.Small ):
-            facteur = 0.8
+            facteur = 0.9
 
         else:
             facteur = 0.7
@@ -86,7 +88,7 @@ class Bot:
         return (distValMilieu + proportionLargeur) * facteur
 
     def AimBot(self,  AsteroideCible : Meteor):
-        diffVitesse = self.soustractionVecteur(AsteroideCible.velocity , Vector(x=self.VitesseMissile/1.90, y=self.VitesseMissile/1.2))
+        diffVitesse = self.soustractionVecteur(AsteroideCible.velocity , self.volicityApproxyMissil(AsteroideCible))
         diffPosition = self.soustractionVecteur(self.PosCanon, AsteroideCible.position)
         TempsColision = self.produitScalaire(diffPosition, diffVitesse) / self.produitScalaire(diffVitesse, diffVitesse)
 
@@ -94,7 +96,14 @@ class Bot:
 
         return posIntercept
 
+    def volicityApproxyMissil(self, AsteroideCible : Meteor):
+        VecteurDirection = self.soustractionVecteur(AsteroideCible.position, self.PosCanon)
+        longueur = self.norme(VecteurDirection)
+        VecteurUnitaire = Vector(VecteurDirection.x / longueur, VecteurDirection.y / longueur)
+        return Vector(self.VitesseMissile * VecteurUnitaire.x, self.VitesseMissile * VecteurUnitaire.y)
 
+    def norme(self,v):
+        return (v.x**2 + v.y**2)**0.5
     def produitScalaire(self,v1, v2):
         return v1.x * v2.x + v1.y * v2.y
 
