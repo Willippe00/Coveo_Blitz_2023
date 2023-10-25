@@ -11,6 +11,10 @@ class Bot:
     PosCanon = 0
     VitesseMissile = 0
     shotLastTick = []
+    shotLastTick2 = []
+    shotLastTick3 = []
+    shotLastTick4 = []
+    shotLastTick5 = []
 
 
 
@@ -29,32 +33,48 @@ class Bot:
 
         Target = game_message.meteors[0]
         Target2 = game_message.meteors[0]
-        Target3 = game_message.meteors[0]
+
+
 
 
         TargetInterestValue = 0
 
         for meteor in game_message.meteors:
            meteorInterest =  self.InterestIndext(game_message, meteor.position.y, meteor.position.x, meteor.meteorType)
-           if(meteorInterest>TargetInterestValue and (meteor not in self.shotLastTick)):
-               Target3 = Target2
+           if (meteorInterest > TargetInterestValue and
+                   meteor.id not in self.shotLastTick and
+                   meteor.id not in self.shotLastTick2 and
+                   meteor.id not in self.shotLastTick3 and
+                   meteor.id not in self.shotLastTick4 and
+                   meteor.id not in self.shotLastTick5):
+
                Target2 = Target
                Target = meteor
                TargetInterestValue = meteorInterest
 
+        self.shotLastTick5.clear()
+        self.shotLastTick5 = self.shotLastTick4.copy()
+        self.shotLastTick4.clear()
+        self.shotLastTick4 = self.shotLastTick3.copy()
+        self.shotLastTick3.clear()
+        self.shotLastTick3 = self.shotLastTick2.copy()
+        self.shotLastTick2.clear()
+        self.shotLastTick2 = self.shotLastTick.copy()
         self.shotLastTick.clear()
+
+
         positionTarget = self.AimBot(Target)
         positionTarget2 = self.AimBot(Target2)
-        positionTarget3 = self.AimBot(Target3)
-        
+
+
 
         print(game_message.score)
-        self.shotLastTick.append(Target)
-        self.shotLastTick.append(Target2)
-        self.shotLastTick.append(Target3)
+        self.shotLastTick.append(Target.id)
+        self.shotLastTick.append(Target2.id)
 
 
-        return [LookAtAction(positionTarget),ShootAction(),LookAtAction(positionTarget2),ShootAction(),LookAtAction(positionTarget3),ShootAction(),]
+
+        return [LookAtAction(positionTarget),ShootAction(),LookAtAction(positionTarget2),ShootAction(),]
 
 
     def firstTick(self, game_message: GameMessage):
@@ -76,15 +96,15 @@ class Bot:
 
 
         facteur = 1
-        if(LargeurActuel < 10):
+        if(LargeurActuel < gamemessage.cannon.position.x + 100):
             facteur = 0
         elif (TypeAsteroide == MeteorType.Small and LargeurActuel < self.Largeur / 2 and HauteurActuel> self.Hauteur/6 and HauteurActuel< 5*self.Hauteur/6):
             facteur = 120
         elif (TypeAsteroide == MeteorType.Small and LargeurActuel < self.Largeur / 2 and HauteurActuel> self.Hauteur/6 and HauteurActuel< 5*self.Hauteur/6):
-            facteur = 3
+            facteur = 70
 
-        elif (TypeAsteroide == MeteorType.Medium  and LargeurActuel < 3*self.Largeur/4 ):
-            facteur = 7
+        elif (TypeAsteroide == MeteorType.Medium  ):
+            facteur = 25
         elif (TypeAsteroide == MeteorType.Large ):
             facteur = 9
 
@@ -105,7 +125,7 @@ class Bot:
     def volicityApproxyMissil(self, AsteroideCible : Meteor):
         positionEstimee = AsteroideCible.position
 
-        for _ in range(90):  # 10 itérations pour convergence (ajuster si nécessaire)
+        for _ in range(60):  # 10 itérations pour convergence (ajuster si nécessaire)
             vecteur_vitesse_missile = self.volicityApproxyMissil_vers_position(positionEstimee)
             delta_temps = self.tempsImpact(positionEstimee, self.PosCanon, self.norme(vecteur_vitesse_missile))
             positionEstimee = self.estimerPosition(AsteroideCible.position, AsteroideCible.velocity, delta_temps)
