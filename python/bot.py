@@ -10,6 +10,9 @@ class Bot:
     InfosAsteroide = 0
     PosCanon = 0
     VitesseMissile = 0
+    shotLastTick = []
+
+
 
     def __init__(self):
         self.direction = 1
@@ -27,25 +30,31 @@ class Bot:
         Target = game_message.meteors[0]
         Target2 = game_message.meteors[0]
         Target3 = game_message.meteors[0]
-        Target4 = game_message.meteors[0]
+
 
         TargetInterestValue = 0
+
         for meteor in game_message.meteors:
            meteorInterest =  self.InterestIndext(game_message, meteor.position.y, meteor.position.x, meteor.meteorType)
-           if(meteorInterest>TargetInterestValue):
-               Target4 = Target3
+           if(meteorInterest>TargetInterestValue and (meteor not in self.shotLastTick)):
                Target3 = Target2
                Target2 = Target
                Target = meteor
                TargetInterestValue = meteorInterest
 
+        self.shotLastTick.clear()
         positionTarget = self.AimBot(Target)
         positionTarget2 = self.AimBot(Target2)
         positionTarget3 = self.AimBot(Target3)
-        positionTarget4 = self.AimBot(Target4)
-        print(game_message.score)
+        
 
-        return [LookAtAction(positionTarget),ShootAction(),LookAtAction(positionTarget2),ShootAction(),LookAtAction(positionTarget3),ShootAction(),LookAtAction(positionTarget4),ShootAction(),]
+        print(game_message.score)
+        self.shotLastTick.append(Target)
+        self.shotLastTick.append(Target2)
+        self.shotLastTick.append(Target3)
+
+
+        return [LookAtAction(positionTarget),ShootAction(),LookAtAction(positionTarget2),ShootAction(),LookAtAction(positionTarget3),ShootAction(),]
 
 
     def firstTick(self, game_message: GameMessage):
@@ -59,34 +68,28 @@ class Bot:
 
     def InterestIndext(self,gamemessage ,HauteurActuel, LargeurActuel, TypeAsteroide):
 
-        proportionLargeur =  (LargeurActuel/self.Largeur) *1.5
+        proportionLargeur =  (LargeurActuel/self.Largeur) *2.5
 
 
-        distValMilieu = 1.5* (1/ abs(HauteurActuel - self.MiHauteur))
+        distValMilieu =  3*(1/ abs(HauteurActuel - self.MiHauteur))
         #distValMilieu = 1
 
 
         facteur = 1
-        if(LargeurActuel < 40):
+        if(LargeurActuel < 10):
             facteur = 0
-        elif (TypeAsteroide == MeteorType.Small and LargeurActuel < self.Largeur/2 and HauteurActuel > (self.Hauteur /5) and HauteurActuel < (4*self.Hauteur /5)):
-            facteur = 16
-        elif (TypeAsteroide == MeteorType.Small and LargeurActuel > self.Largeur/2  ):
-            facteur = 0.3
-        elif (TypeAsteroide == MeteorType.Medium and  HauteurActuel > (self.Hauteur / 3) and HauteurActuel < (2 * (self.Hauteur / 3))):
-            facteur = 10
-        elif (TypeAsteroide == MeteorType.Large and LargeurActuel > 2*self.Largeur/3):
+        elif (TypeAsteroide == MeteorType.Small and LargeurActuel < self.Largeur / 2 and HauteurActuel> self.Hauteur/6 and HauteurActuel< 5*self.Hauteur/6):
+            facteur = 120
+        elif (TypeAsteroide == MeteorType.Small and LargeurActuel < self.Largeur / 2 and HauteurActuel> self.Hauteur/6 and HauteurActuel< 5*self.Hauteur/6):
             facteur = 3
 
-        elif(TypeAsteroide == MeteorType.Large):
-            facteur = 0.9
-        elif(TypeAsteroide == MeteorType.Medium):
-            facteur = 1.2
-        elif (TypeAsteroide == MeteorType.Small ):
-            facteur = 0.9
+        elif (TypeAsteroide == MeteorType.Medium  and LargeurActuel < 3*self.Largeur/4 ):
+            facteur = 7
+        elif (TypeAsteroide == MeteorType.Large ):
+            facteur = 9
 
-        else:
-            facteur = 0.7
+
+
 
         return (distValMilieu + proportionLargeur) * facteur
 
@@ -102,7 +105,7 @@ class Bot:
     def volicityApproxyMissil(self, AsteroideCible : Meteor):
         positionEstimee = AsteroideCible.position
 
-        for _ in range(70):  # 10 itérations pour convergence (ajuster si nécessaire)
+        for _ in range(90):  # 10 itérations pour convergence (ajuster si nécessaire)
             vecteur_vitesse_missile = self.volicityApproxyMissil_vers_position(positionEstimee)
             delta_temps = self.tempsImpact(positionEstimee, self.PosCanon, self.norme(vecteur_vitesse_missile))
             positionEstimee = self.estimerPosition(AsteroideCible.position, AsteroideCible.velocity, delta_temps)
